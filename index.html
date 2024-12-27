@@ -1,0 +1,529 @@
+<html><head><base href="https://"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Quiz do Amor &#x2764;&#xfe0f;</title>
+    <!-- Adding jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+      }
+    
+      body {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        min-height: 100vh;
+        padding: 20px;
+        color: #fff;
+      }
+    
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border-radius: 30px;
+        padding: 40px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      }
+    
+      h1 {
+        text-align: center;
+        margin-bottom: 40px;
+        font-size: 3em;
+        font-weight: 700;
+        background: linear-gradient(45deg, #fff, #ffd1d1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.1);
+      }
+    
+      .question-container {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 30px;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        transition: transform 0.3s ease;
+      }
+    
+      .question {
+        font-size: 1.4em;
+        margin-bottom: 25px;
+        font-weight: 500;
+      }
+    
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+    
+      .option {
+        background: rgba(255, 255, 255, 0.25);
+        padding: 20px;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+    
+      .option:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: translateY(-2px);
+      }
+    
+      .option.correct {
+        background: #4CAF50;
+        animation: correctAnswer 0.5s ease;
+      }
+    
+      .option.incorrect {
+        background: #f44336;
+        animation: incorrectAnswer 0.5s ease;
+      }
+    
+      @keyframes correctAnswer {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    
+      @keyframes incorrectAnswer {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+        100% { transform: translateX(0); }
+      }
+    
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 10px;
+        margin: 20px 0;
+        overflow: hidden;
+      }
+    
+      .progress {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        transition: width 0.5s;
+      }
+    
+      #next-btn {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 1.2em;
+        transition: transform 0.3s ease;
+      }
+    
+      #next-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+      }
+    
+      #next-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    
+      .score-display {
+        text-align: center;
+        font-size: 1.2em;
+        margin-bottom: 20px;
+      }
+    
+      .score-change {
+        position: fixed;
+        color: white;
+        font-size: 24px;
+        pointer-events: none;
+        animation: floatUp 1s ease-out forwards;
+        z-index: 1000;
+      }
+    
+      @keyframes floatUp {
+        0% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-50px);
+        }
+      }
+    
+      .message-area {
+        margin-top: 20px;
+      }
+    
+      #special-message {
+        width: 100%;
+        padding: 15px;
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1em;
+        margin: 15px 0;
+        resize: vertical;
+      }
+    
+      #special-message::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+      }
+    
+      .message-btn {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1.1em;
+        margin: 10px 10px 10px 0;
+        transition: transform 0.3s ease;
+      }
+    
+      .message-btn:hover {
+        transform: translateY(-2px);
+      }
+    
+      .skip-btn {
+        background: linear-gradient(45deg, #666, #444);
+      }
+    
+      .love-message-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        z-index: 1000;
+        animation: popIn 0.5s ease-out;
+        color: white;
+        text-align: center;
+        max-width: 80%;
+      }
+    
+      @keyframes popIn {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 0;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+      }
+    
+      @media screen and (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+    
+        h1 {
+          font-size: 2em;
+        }
+    
+        .question {
+          font-size: 1.2em;
+        }
+    
+        .option {
+          padding: 15px;
+          font-size: 0.9em;
+        }
+    
+        #next-btn {
+          width: 100%;
+          padding: 12px;
+          font-size: 1em;
+        }
+    
+        .message-btn {
+          width: 100%;
+          margin: 10px 0;
+          padding: 10px;
+        }
+    
+        #special-message {
+          min-height: 100px;
+        }
+      }
+    
+      @media screen and (max-width: 480px) {
+        .container {
+          padding: 15px;
+          margin: 5px;
+        }
+    
+        h1 {
+          font-size: 1.8em;
+          margin-bottom: 20px;
+        }
+    
+        .question-container {
+          padding: 20px;
+        }
+    
+        .question {
+          font-size: 1.1em;
+          margin-bottom: 15px;
+        }
+    
+        .option {
+          padding: 12px;
+          font-size: 0.85em;
+        }
+    
+        .score-display {
+          font-size: 1em;
+        }
+    
+        .progress-bar {
+          height: 15px;
+          margin: 15px 0;
+        }
+      }
+    </style></head><body>
+    <div class="container">
+      <h1>Quiz do Amor &#x2764;&#xfe0f;</h1>
+      <div class="score-display">Pontua&#xe7;&#xe3;o: <span id="score-value">0</span></div>
+      <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+      </div>
+      <div id="quiz-container"></div>
+      <button id="next-btn" onclick="checkAnswer()" disabled>Pr&#xf3;xima Pergunta</button>
+    </div>
+    
+    <script>const questions = [{
+      question: "Qual e a coisa mais importante pra mim?",
+      options: ["Carinho", "Comunicação", "Beleza física", "Dinheiro"],
+      correct: 1
+    }, {
+      question: "Como demonstrar amor de forma mais significativa para mim?",
+      options: ["Apenas dizendo eu te amo", "Através de ações e palavras", "Comprando presentes caros", "Postando nas redes sociais"],
+      correct: 1
+    }, {
+      question: "O que é mais importante em um relacionamento?",
+      options: ["Paixão", "Confiança", "Comunicação", "Independência"],
+      correct: 1
+    }, {
+      question: "Como lidar com conflitos em um relacionamento?",
+      options: ["Ignorando o problema", "Discutindo e conversar  abertamente", "Desistindo do relacionamento", "Mudando de assunto"],
+      correct: 1
+    }, {
+      question: "Qual é o melhor de lidar comigo quando estou bravo?",
+      options: ["Abraços e Carinhos", "Conversar e Acalmar", "Tentar evitar o assunto e silencio", "Não conversar comigo"],
+      correct: 1
+    }, {
+      question: "O que voce pode fazer para mudar meu humor?",
+      options: ["Conversar muito comigo", "Mandar mensagem carinhosas", "Estar comigo presencial", "Ser estranha comigo"],
+      correct: 2
+    }, {
+      question: "Qual minha cor favorita?",
+      options: ["Preto", "Azul", "Rosa", "Roxo"],
+      correct: 0
+    }, {
+      question: "Qual é o papel da intimidade em um relacionamento?",
+      options: ["É apenas física", "É apenas emocional", "É uma combinação de ambos", "Todas Acima"],
+      correct: 3
+    }, {
+      question: "Como lidar com a distância em um relacionamento?",
+      options: ["Mantendo a comunicação aberta e bastante carinho", "Planejando visitas frequentes e mandar cartas", "Enviando presentes", "Desistindo do relacionamento"],
+      correct: 0
+    }, {
+      question: "O que é essencial para um relacionamento de longo prazo?",
+      options: ["Paixão", "Confiança", "Comunicação", "Tudo acima"],
+      correct: 3
+    }, {
+      question: "Como me manter proximo?",
+      options: ["Conversar, pedidos , formas claras", "Conversar , falar , mandar", "Conversar, chamar, ser clara", "Todas as opções acima"],
+      correct: 2
+    }, {
+      question: "Qual é o melhor jeito de resolver uma briga?",
+      options: ["Discutindo abertamente", "Ignorando o problema", "Estar proximo e presencial", "Mudando de assunto"],
+      correct: 2
+    }, {
+      question: "O que é fundamental para me ver feliz?",
+      options: ["Estar perto", "Comunicação aberta", "Cuidados", "Tudo acima"],
+      correct: 3
+    }, {
+      question: "Como manter a conexão emocional em um relacionamento?",
+      options: ["Mantendo a comunicação aberta", "Fazendo atividades juntos", "Surpreendendo o parceiro", "Todas as opções acima"],
+      correct: 3
+    }, {
+      question: "Como consertar as coisas caso erre?",
+      options: ["Ver o erro e arrumar conversando e praticando atitudes", "Ver o erro e somente ver que estar certa", "Não é importante", "Somente ver que errou e nao falar nada"],
+      correct: 0
+    }, {
+      question: "Como saber se estou bravo?",
+      options: ["Palavras frias", "Ficando mais queito", "Falando mais", "Sendo ignorante"],
+      correct: 1
+    }, {
+      question: "Para mim e importante o perdão em um relacionamento?",
+      options: ["Não é importante", "É fundamental", "Depende da situação", "Só serve para relacionamentos ruins"],
+      correct: 1
+    }, {
+      question: "Gosto de me sentir util?",
+      options: ["Sim", "Não", "Logico", "Nunca"],
+      correct: 2
+    }, {
+      question: "Como me fazer amado e acolhido?",
+      options: ["Converse, pede esteja e presente", "Converse", "Não minta", "somente esteja perto"],
+      correct: 0
+    }, {
+      question: "Como manter o equilíbrio entre vida pessoal e relacionamento?",
+      options: ["Dedicando-se só ao relacionamento", "Mantendo limites saudáveis", "Ignorando o parceiro", "Não é possível ter equilíbrio"],
+      correct: 1
+    }, {
+      question: "Como manter a conversa sempre bem?",
+      options: ["Converse mais e fale mais sobre tudo", "Fale da forma que quiser", "Equilibrando momentos juntos e separados", "Somente fazendo"],
+      correct: 0
+    }, {
+      question: "Qual a importância do companheirismo?",
+      options: ["Não é importante", "É fundamental para a relação", "Só importa no início", "É temporário"],
+      correct: 1
+    }, {
+      question: "Como lidar com ciúmes no relacionamento?",
+      options: ["Ignorando", "Conversando abertamente", "Terminando", "Provocando mais ciúmes"],
+      correct: 1
+    }, {
+      question: "Como resolver as diferenças ?",
+      options: ["Impor seus valores", "Conversar e resolver juntos", "Ignorar as diferenças", "Terminar imediatamente"],
+      correct: 1
+    }, {
+      question: "Como manter a admiração no relacionamento?",
+      options: ["Valorizando as qualidades", "Focando nos defeitos", "Sendo indiferente", "Comparando com outros"],
+      correct: 0
+    }];
+    const loveMessages = ["Yasmin, seu sorriso ilumina meu mundo! 🌟", "Yasmin, você maravilhosa! 🌟", "Com você, a vida toca em um tom perfeito, Yasmin. 🎵✨", "Seu coração está no lugar certo! 💖", "Amar você é compor uma sinfonia de emoções, Yasmin. 🎼❤️", "Você é a nota perfeita da minha canção, Yasmin. 🎶❤️", "Você é a melodia que não sai do meu coração, Yasmin. 💓🎼", "Você é meu verso favorito, Yasmin. 💕🎵", "No palco do amor, você é minha estrela, Yasmin. 🌟🎙️", "Você é o som que ecoa na minha alma, Yasmin. 🌌🎶"];
+    let currentQuestion = 0;
+    let score = 0;
+    let selectedOption = null;
+    function createScoreChangeAnimation(value, x, y) {
+      const element = document.createElement('div');
+      element.className = 'score-change';
+      element.style.left = `${x}px`;
+      element.style.top = `${y}px`;
+      element.textContent = value > 0 ? `+${value}` : value;
+      element.style.color = value > 0 ? '#4CAF50' : '#f44336';
+      document.body.appendChild(element);
+      setTimeout(() => element.remove(), 1000);
+    }
+    function displayQuestion() {
+      const questionContainer = document.getElementById('quiz-container');
+      const question = questions[currentQuestion];
+      let html = `
+        <div class="question-container">
+          <div class="question">${question.question}</div>
+          <div class="options">
+      `;
+      question.options.forEach((option, index) => {
+        html += `
+          <div class="option" onclick="selectOption(${index})">
+            ${option}
+          </div>
+        `;
+      });
+      html += '</div></div>';
+      questionContainer.innerHTML = html;
+      document.getElementById('next-btn').disabled = true;
+      updateProgress();
+      updateScoreDisplay();
+    }
+    function selectOption(index) {
+      selectedOption = index;
+      document.getElementById('next-btn').disabled = false;
+      const options = document.querySelectorAll('.option');
+      options.forEach(option => option.classList.remove('selected'));
+      options[index].classList.add('selected');
+    }
+    function checkAnswer() {
+      const selectedElement = document.querySelectorAll('.option')[selectedOption];
+      const rect = selectedElement.getBoundingClientRect();
+      if (selectedOption === questions[currentQuestion].correct) {
+        score += 10;
+        createScoreChangeAnimation(10, rect.right, rect.top);
+        selectedElement.classList.add('correct');
+        showLoveMessage();
+        setTimeout(() => {
+          nextQuestion();
+        }, 1000);
+      } else {
+        score -= 10;
+        createScoreChangeAnimation(-10, rect.right, rect.top);
+        selectedElement.classList.add('incorrect');
+        document.querySelectorAll('.option')[questions[currentQuestion].correct].classList.add('correct');
+        setTimeout(() => {
+          nextQuestion();
+        }, 1000);
+      }
+      updateScoreDisplay();
+    }
+    function updateScoreDisplay() {
+      document.getElementById('score-value').textContent = score;
+    }
+    function nextQuestion() {
+      currentQuestion++;
+      selectedOption = null;
+      if (currentQuestion < questions.length) {
+        displayQuestion();
+      } else {
+        generateAndSendPDF();
+      }
+    }
+    function updateProgress() {
+      const progress = document.getElementById('progress');
+      const percentage = currentQuestion / questions.length * 100;
+      progress.style.width = `${percentage}%`;
+    }
+    function generateAndSendPDF() {
+      document.getElementById('quiz-container').innerHTML = `
+        <div class="question-container">
+          <h2>Quiz Concluído!</h2>
+          <p>Sua pontuação final: ${score} pontos</p>
+          <div class="message-area">
+            <p>Quer adicionar uma mensagem especial? (opcional)</p>
+            <textarea id="special-message" rows="4" placeholder="Digite sua mensagem aqui (opcional)"></textarea>
+            <button onclick="sendToWhatsApp()" class="message-btn">Proxima Parte.</button>
+            <button onclick="sendToWhatsApp(true)" class="message-btn skip-btn">Pular essa parte.</button>
+          </div>
+        </div>
+      `;
+      document.getElementById('next-btn').style.display = 'none';
+    }
+    function sendToWhatsApp(skip = false) {
+      let userMessage = skip ? '' : document.getElementById('special-message').value;
+      userMessage = userMessage.trim();
+      const baseMessage = `Resultado do Quiz do Amor:%0A%0APontuação Final: ${score} pontos%0AQuestões respondidas: ${questions.length}`;
+      const finalMessage = userMessage ? `${baseMessage}%0A%0AMensagem especial:%0A${encodeURIComponent(userMessage)}%0A%0AParabéns por completar o quiz!` : `${baseMessage}%0A%0AParabéns por completar o quiz!`;
+      window.open(`https://api.whatsapp.com/send?phone=5562995551544&text=${finalMessage}`);
+      document.getElementById('quiz-container').innerHTML = `
+        <div class="question-container">
+          <h2>Mensagem Enviada!</h2>
+          <p>Sua pontuação final: ${score} pontos</p>
+          <p>O resultado foi enviado para o WhatsApp!</p>
+        </div>
+      `;
+    }
+    function showLoveMessage() {
+      const randomMessage = loveMessages[Math.floor(Math.random() * loveMessages.length)];
+      const popup = document.createElement('div');
+      popup.className = 'love-message-popup';
+      popup.textContent = randomMessage;
+      document.body.appendChild(popup);
+      setTimeout(() => {
+        popup.remove();
+      }, 2000);
+    }
+    displayQuestion();</script></body></html>
